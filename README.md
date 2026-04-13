@@ -4,7 +4,7 @@ In an increasingly globalised world individuals are more open to relocating for 
 ### Desription
 This project aims to build an end-to-end data analytics solution that analyzes and compares cost of living and salary data across global cities.
 
-### Financial Viability
+### Research Questions
 Which cities offer the highest absolute savings, (salary minus cost of living)? <br>
 Which cities offer the best savings ratio (relative affordability)? <br>
 How does cost of living vary across regions and countries? <br>

@@ -12,7 +12,6 @@ Are there geographic patterns in high-salary vs high-cost cities? <br>
 How much of income is typically spent on rent vs other expenses? <br>
 Which factors contribute most to high living costs? <br>
 How do cities within the same country differ? <br>
-Which countries provide the best balance between income and expenses? <br>
 
 ### Tools
 Data cleaning with Pandas and NumPy <br>

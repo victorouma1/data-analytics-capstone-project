@@ -7,8 +7,9 @@ This project aims to build an end-to-end data analytics solution that analyzes a
 ### Research Questions
 Which countries offer the highest absolute savings, (salary minus cost of living)? <br>
 How does cost of living vary across countries? <br>
-What is the trend in cost of living adjusted for inflation? <br>
-How much of income is typically spent on rent vs other expenses? <br>
+What is the trend in cost of living? <br>
+What are the five most and least expensive cities in Europe? <br>
+How big a factor is rent in terms of cost of living compared to everthing else? <br>
 Which factors contribute most to high living costs? <br>
 
 ### Tools

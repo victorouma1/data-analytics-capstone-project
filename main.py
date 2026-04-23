@@ -6,6 +6,7 @@ import map
 import pie
 import trend_line
 import top_and_bottom_5
+import absolute_savings
 
 europe_map = map.europe_map()
 format_europe = europe_map.format_data()
@@ -23,4 +24,8 @@ pie_plot = pie_chart.plot_pie()
 bar = top_and_bottom_5.best_and_worst()
 format_bar = bar.format()
 plot_bar = bar.plot_bar()
+
+savings = absolute_savings.savings()
+savings_format = savings.format()
+savings_plot_bar = savings.plot_bar()
 

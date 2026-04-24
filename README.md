@@ -7,14 +7,15 @@ This project aims to build an end-to-end data analytics solution that analyzes a
 ### Research Questions
 Which countries offer the highest absolute savings, (median salary minus median cost of living)?<br>
 How does cost of living vary across countries? <br>
-What is the trend in cost of living? <br>
+What is the trend in cost of living and salary over time? <br>
 What are the five most and least expensive cities in Europe? <br>
-How big a factor is rent in terms of cost of living compared to everthing else? <br>
+How big a factor is rent as a percent cost of living compared to everthing else? <br>
+Correlation between population and cost of living? <br>
 
 ### Tools
-Data cleaning with Pandas and NumPy <br>
+Data cleaning in Power Query <br>
 Store data in SQL database (design schema + queries) <br>
 Visualizations with Matplotlib & Seaborn <br>
 Interactive maps using GeoPandas <br>
 Summary dashboard in Dash <br>
-Data cleaning in Power Query <br>
+

@@ -23,11 +23,11 @@ class europe_map:
         ]
         self.ppp_2022_grouped = ppp_filtered_2022.groupby('Geopolitical entity (reporting)')[['OBS_VALUE']].median()
     def plot_map(self):
-        countries = gpd.read_file("europe.geojson")
+        countries = gpd.read_file("CNTR_RG_20M_2024_4326.geojson")
         fig = px.choropleth(self.ppp_2022_grouped, geojson=countries, locations=self.ppp_2022_grouped.index, color='OBS_VALUE',
                                 color_continuous_scale="Viridis",
                                 range_color=(5000,50000),
                                 scope="europe",
-                                featureidkey="properties.NAME",
+                                featureidkey="properties.NAME_ENGL",
                                 labels={'OBS_VALUE':'cost_of_living'})
         fig.show()

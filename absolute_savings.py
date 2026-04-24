@@ -17,6 +17,7 @@ class savings:
             'Serbia', 'Slovakia', 'Slovenia', 'Spain', 'Sweden', 'Switzerland', 'Ukraine', 'United Kingdom'
         ]
         df_2022_rows = self.__df_2022[self.__df_2022['Geopolitical entity (reporting)'].isin(european_countries)]
+        df_2022_rows = df_2022_rows[df_2022_rows['OBS_VALUE'] > 1000]
         df_2022_grouped = df_2022_rows.groupby(['Geopolitical entity (reporting)'])[['OBS_VALUE']].median()
 
         self.__df_ppp['TIME_PERIOD'] = pd.to_datetime(self.__df_ppp['TIME_PERIOD'], format = '%Y') 

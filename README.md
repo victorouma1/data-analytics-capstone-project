@@ -5,12 +5,11 @@ In an increasingly globalised world individuals are more open to relocating for 
 This project aims to build an end-to-end data analytics solution that analyzes and compares cost of living and salary data across European cities.
 
 ### Research Questions
-Which countries offer the highest absolute savings, (median salary minus median cost of living)?<br>
+Is there a correlation between population and absolute savings, (median salary minus median cost of living)?<br>
 How does cost of living vary across countries? <br>
 What is the trend in cost of living and salary over time? <br>
 What are the five most and least expensive cities in Europe? <br>
-How big a factor is rent as a percent cost of living compared to everthing else? <br>
-Correlation between population and cost of living? <br>
+How big a percent does rent take from monthly income? <br>
 
 ### Tools
 Data cleaning in Power Query <br>

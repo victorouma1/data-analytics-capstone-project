@@ -6,14 +6,11 @@ import matplotlib
 import seaborn as sns
 import plotly.express as px
 
-# ── Page config ────────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="European Earnings Explorer",
-    page_icon="💶",
     layout="wide",
 )
 
-# ── Custom CSS / Fonts ──────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
@@ -154,7 +151,6 @@ html, body, [class*="css"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ── Matplotlib dark theme ───────────────────────────────────────────────────────
 matplotlib.rcParams.update({
     "figure.facecolor": "#1a1040",
     "axes.facecolor":   "#1a1040",
@@ -171,7 +167,6 @@ matplotlib.rcParams.update({
     "axes.titlesize":   13,
 })
 
-# ── Country list ────────────────────────────────────────────────────────────────
 EUROPEAN_COUNTRIES = sorted([
     'Albania', 'Andorra', 'Austria', 'Belarus', 'Belgium',
     'Bosnia And Herzegovina', 'Bulgaria', 'Croatia', 'Cyprus',
@@ -198,23 +193,19 @@ SURVEY_FILES = {
            "indicator_col": "Structure of earnings indicator", "sex_col": "Sex.1", "unit_col": "Unit of measure", "euro_value": "Euro"},
 }
 
-# ── Hero header ─────────────────────────────────────────────────────────────────
 st.markdown('<div class="hero-title">💶 European Earnings Explorer</div>', unsafe_allow_html=True)
 st.markdown('<div class="hero-sub">Salaries · Cost of Living · Savings Across Europe</div>', unsafe_allow_html=True)
 st.markdown('<div class="fancy-divider"></div>', unsafe_allow_html=True)
 
-# ── Tabs ────────────────────────────────────────────────────────────────────────
+
 tab_map, tab_trend, tab_pie, tab_topbot, tab_savings = st.tabs([
-    "🗺️  Cost of Living Map",
-    "📈  Salary vs Cost Trend",
-    "🥧  Income Breakdown",
-    "🏆  Top & Bottom Cities",
-    "💰  Savings Potential",
+    "  Cost of Living Map",
+    "  Salary vs Cost Trend",
+    "  Income Breakdown",
+    "  Top & Bottom Cities",
+    "  Savings Potential",
 ])
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 1 – MAP
-# ═══════════════════════════════════════════════════════════════════════════════
 with tab_map:
     st.markdown('<div class="section-header">Cost of Living Across Europe (2022)</div>', unsafe_allow_html=True)
     st.caption("Nominal expenditure per inhabitant in euros — Actual Individual Consumption category.")
@@ -262,7 +253,7 @@ with tab_map:
     <div style="margin-top:1.5rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
 
       <div class="metric-card" style="border-left:3px solid #f9c74f">
-        <div class="metric-label">🟡 The Expensive Tier</div>
+        <div class="metric-label"> The Expensive Tier</div>
         <p style="color:#d0c8f0; font-size:0.9rem; margin:0.5rem 0 0">
           <b style="color:#f9c74f">Switzerland</b> consistently ranks as the most expensive country in Europe,
           driven by exceptional wages, a strong franc, and costly services.
@@ -273,7 +264,7 @@ with tab_map:
       </div>
 
       <div class="metric-card" style="border-left:3px solid #90be6d">
-        <div class="metric-label">🟢 Western & Northern Core</div>
+        <div class="metric-label"> Western & Northern Core</div>
         <p style="color:#d0c8f0; font-size:0.9rem; margin:0.5rem 0 0">
           <b style="color:#90be6d">Germany, France & the UK</b> maintain a high-middle cost of living — housing
           in London, Paris, and Munich keeps averages elevated.
@@ -283,7 +274,7 @@ with tab_map:
       </div>
 
       <div class="metric-card" style="border-left:3px solid #4cc9f0">
-        <div class="metric-label">🔵 Mediterranean & Central Divide</div>
+        <div class="metric-label"> Mediterranean & Central Divide</div>
         <p style="color:#d0c8f0; font-size:0.9rem; margin:0.5rem 0 0">
           <b style="color:#4cc9f0">Italy & Spain</b> have affordable rural regions that pull national averages
           below their expensive city centres. <b style="color:#4cc9f0">Czechia</b> is rapidly catching up to
@@ -292,7 +283,7 @@ with tab_map:
       </div>
 
       <div class="metric-card" style="border-left:3px solid #a89ed0">
-        <div class="metric-label">🟣 Lower-Cost East</div>
+        <div class="metric-label"> Lower-Cost East</div>
         <p style="color:#d0c8f0; font-size:0.9rem; margin:0.5rem 0 0">
           <b style="color:#a89ed0">The Balkans</b> (Bulgaria, Serbia, Albania, etc.) are often 60–70% cheaper
           than Switzerland for housing, dining, and local services.
@@ -304,9 +295,6 @@ with tab_map:
     </div>
     """, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 2 – TREND LINE
-# ═══════════════════════════════════════════════════════════════════════════════
 with tab_trend:
     st.markdown('<div class="section-header">Salary vs Cost of Living Over Time</div>', unsafe_allow_html=True)
 
@@ -401,9 +389,6 @@ with tab_trend:
     except FileNotFoundError as e:
         st.error(f"Missing data file: {e}")
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 3 – PIE
-# ═══════════════════════════════════════════════════════════════════════════════
 with tab_pie:
     st.markdown('<div class="section-header">How Europeans Spend Their Income</div>', unsafe_allow_html=True)
     st.caption("Average split between rent and all other expenses across European cities.")
@@ -468,7 +453,7 @@ with tab_pie:
 
     st.markdown("""
     <div class="metric-card" style="margin-top:1.5rem; border-left:3px solid #f3722c">
-      <div class="metric-label">📌 Why is Rent So High Across Europe?</div>
+      <div class="metric-label"> Why is Rent So High Across Europe?</div>
       <p style="color:#d0c8f0; font-size:0.93rem; margin:0.6rem 0 0; line-height:1.7">
         Rent is high across Europe due to a severe imbalance between <b style="color:#f3722c">high demand and low supply</b>,
         compounded by rapid urbanisation, the growth of short-term tourist lets, and rising costs for landlords.
@@ -478,9 +463,6 @@ with tab_pie:
     </div>
     """, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 4 – TOP & BOTTOM CITIES
-# ═══════════════════════════════════════════════════════════════════════════════
 with tab_topbot:
     st.markdown('<div class="section-header">Cheapest & Priciest European Cities</div>', unsafe_allow_html=True)
     st.caption("Based on a standardised monthly basket of goods, services, and housing.")
@@ -542,7 +524,7 @@ with tab_topbot:
         col_top, col_bot = st.columns(2, gap="large")
 
         with col_top:
-            st.markdown("#### 🔴 Most Expensive Cities")
+            st.markdown("####  Most Expensive Cities")
             fig_top, ax_top = plt.subplots(figsize=(6, 4))
             palette_top = sns.color_palette("YlOrRd", len(top5))[::-1]
             sns.barplot(x=top5["Total_Monthly_Spending"], y=top5.index,
@@ -556,7 +538,7 @@ with tab_topbot:
             plt.close(fig_top)
 
         with col_bot:
-            st.markdown("#### 🟢 Most Affordable Cities")
+            st.markdown("####  Most Affordable Cities")
             fig_bot, ax_bot = plt.subplots(figsize=(6, 4))
             palette_bot = sns.color_palette("YlGn", len(bottom5))[::-1]
             sns.barplot(x=bottom5["Total_Monthly_Spending"], y=bottom5.index,
@@ -576,7 +558,7 @@ with tab_topbot:
     <div style="margin-top:1.5rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
 
       <div class="metric-card" style="border-left:3px solid #f94144">
-        <div class="metric-label">🔴 High-End Spending Cities</div>
+        <div class="metric-label"> High-End Spending Cities</div>
         <p style="color:#d0c8f0; font-size:0.9rem; margin:0.5rem 0 0; line-height:1.65">
           <b style="color:#f94144">Zurich, Switzerland</b> tops the chart with monthly costs exceeding <b>€2,250</b>.
           <b style="color:#f94144">London (UK)</b> and <b style="color:#f94144">Dublin (Ireland)</b> follow closely
@@ -586,7 +568,7 @@ with tab_topbot:
       </div>
 
       <div class="metric-card" style="border-left:3px solid #90be6d">
-        <div class="metric-label">🟢 Budget-Friendly Cities</div>
+        <div class="metric-label"> Budget-Friendly Cities</div>
         <p style="color:#d0c8f0; font-size:0.9rem; margin:0.5rem 0 0; line-height:1.65">
           <b style="color:#90be6d">Izmir, Turkey</b> is the most affordable at around <b>€365/month</b>.
           Turkish cities occupy three of the five lowest spots, reflecting local economic conditions and
@@ -598,7 +580,7 @@ with tab_topbot:
     </div>
     <div class="metric-card" style="margin-top:1rem; border-left:3px solid #f9c74f; text-align:center">
       <p style="color:#d0c8f0; font-size:0.95rem; margin:0">
-        ⚡ Living in <b style="color:#f94144">Zurich</b> is approximately
+         Living in <b style="color:#f94144">Zurich</b> is approximately
         <b style="color:#f9c74f; font-size:1.2rem">6×</b> more expensive than living in
         <b style="color:#90be6d">Izmir</b> — a striking divide between Western Europe's financial centres
         and the emerging markets of the East and Southeast.
@@ -606,9 +588,6 @@ with tab_topbot:
     </div>
     """, unsafe_allow_html=True)
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# TAB 5 – SAVINGS POTENTIAL
-# ═══════════════════════════════════════════════════════════════════════════════
 with tab_savings:
     st.markdown('<div class="section-header">Where Can You Save the Most?</div>', unsafe_allow_html=True)
     st.caption("Median gross salary minus nominal annual cost of living per inhabitant (2022).")
@@ -668,7 +647,6 @@ with tab_savings:
                   <div class="metric-value" style="color:{colour}">€{row['Savings']:,.0f}</div>
                 </div>""", unsafe_allow_html=True)
 
-        # Full ranking expander
         with st.expander("📊 View full savings ranking"):
             full_df = full_savings.reset_index()
             full_df.columns = ["Country", "Estimated Annual Savings (€)"]
@@ -680,7 +658,7 @@ with tab_savings:
         <div style="margin-top:1.5rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
 
           <div class="metric-card" style="border-left:3px solid #f9c74f">
-            <div class="metric-label">🏔️ High-Income Powerhouses: Iceland & Denmark</div>
+            <div class="metric-label"> High-Income Powerhouses: Iceland & Denmark</div>
             <p style="color:#d0c8f0; font-size:0.9rem; margin:0.5rem 0 0; line-height:1.65">
               These countries lead because their <b style="color:#f9c74f">gross salaries are so high</b> that even
               with an expensive cost of living, the remaining margin is massive.
@@ -691,7 +669,7 @@ with tab_savings:
           </div>
 
           <div class="metric-card" style="border-left:3px solid #4cc9f0">
-            <div class="metric-label">⚖️ The "Sweet Spot" Economies</div>
+            <div class="metric-label"> The "Sweet Spot" Economies</div>
             <p style="color:#d0c8f0; font-size:0.9rem; margin:0.5rem 0 0; line-height:1.65">
               <b style="color:#4cc9f0">North Macedonia</b> offers some of the lowest living costs in Europe
               (rent can be 80% cheaper than NYC) with disproportionately high wages for skilled workers.
@@ -708,7 +686,6 @@ with tab_savings:
     except (FileNotFoundError, KeyError) as e:
         st.error(f"Data error: {e}")
 
-# ── Footer ──────────────────────────────────────────────────────────────────────
 st.markdown("""
 <hr style="border:none; border-top:1px solid #3d3460; margin-top:2.5rem;">
 <p style="text-align:center; color:#5a5080; font-size:0.78rem; font-family:'DM Sans',sans-serif;">

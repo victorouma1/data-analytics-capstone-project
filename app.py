@@ -198,12 +198,11 @@ st.markdown('<div class="hero-sub">Salaries · Cost of Living · Savings Across 
 st.markdown('<div class="fancy-divider"></div>', unsafe_allow_html=True)
 
 
-tab_map, tab_trend, tab_pie, tab_topbot, tab_savings = st.tabs([
+tab_map, tab_trend, tab_pie, tab_topbot = st.tabs([
     "  Cost of Living Map",
     "  Salary vs Cost Trend",
     "  Income Breakdown",
     "  Top & Bottom Cities",
-    "  Savings Potential",
 ])
 
 with tab_map:
@@ -287,7 +286,6 @@ with tab_map:
           <b style="color:#a89ed0">The Balkans</b> (Bulgaria, Serbia, Albania, etc.) are often 60–70% cheaper
           than Switzerland for housing, dining, and local services.
           <b style="color:#a89ed0">Poland & Hungary</b> remain relatively affordable despite recent inflation.
-          Note: salary survey data is collected every four years and published with a two-year lag.
         </p>
       </div>
 
@@ -587,98 +585,6 @@ with tab_topbot:
     </div>
     """, unsafe_allow_html=True)
 
-with tab_savings:
-    st.markdown('<div class="section-header">Where Can You Save the Most?</div>', unsafe_allow_html=True)
-    st.caption("Median gross salary minus nominal annual cost of living per inhabitant (2022).")
-
-    @st.cache_data
-    def load_savings_data():
-        df_2022 = pd.read_csv("Structure of Earnings Survey 2022.csv")
-        df_ppp  = pd.read_csv("Purchasing Power Parities.csv")
-
-        df_2022_rows = df_2022[df_2022["Geopolitical entity (reporting)"].isin(EUROPEAN_COUNTRIES)]
-        df_2022_rows = df_2022_rows[df_2022_rows["OBS_VALUE"] > 1000]
-        salary_grouped = df_2022_rows.groupby("Geopolitical entity (reporting)")[["OBS_VALUE"]].median()
-
-        df_ppp["TIME_PERIOD"] = pd.to_datetime(df_ppp["TIME_PERIOD"], format="%Y")
-        df_ppp_2022 = df_ppp[df_ppp["TIME_PERIOD"] == "2022-01-01"]
-        ppp_filtered = df_ppp_2022[
-            (df_ppp_2022["Purchasing power parities indicator"] == "Nominal expenditure per inhabitant (in euro)") &
-            (df_ppp_2022["Analytical categories for purchasing power parities (PPPs) calculation (based on COICOP18)"] == "Actual individual consumption")
-        ]
-        ppp_grouped = ppp_filtered.groupby("Geopolitical entity (reporting)")[["OBS_VALUE"]].median()
-        ppp_grouped = ppp_grouped.drop("United States", errors="ignore")
-
-        savings_series = salary_grouped["OBS_VALUE"] - ppp_grouped["OBS_VALUE"]
-        savings_series = savings_series.dropna().sort_values(ascending=False)
-        top5 = savings_series.nlargest(5).reset_index()
-        top5.columns = ["Country", "Savings"]
-        return top5, savings_series
-
-    try:
-        top5_df, full_savings = load_savings_data()
-
-        col_chart, col_rank = st.columns([3, 2], gap="large")
-
-        with col_chart:
-            fig_sav, ax_sav = plt.subplots(figsize=(7, 4.5))
-            palette_sav = ["#f9c74f", "#f3722c", "#90be6d", "#4cc9f0", "#f94144"]
-            bars = ax_sav.bar(top5_df["Country"], top5_df["Savings"],
-                              color=palette_sav, edgecolor="#1a1040", linewidth=1.5)
-            ax_sav.bar_label(bars, fmt="€%.0f", padding=6, color="#f0ecff", fontsize=10, fontweight="bold")
-            ax_sav.set_title("Top 5 Countries by Estimated Annual Savings", color="#f9c74f", fontsize=13)
-            ax_sav.set_xlabel("Country")
-            ax_sav.set_ylabel("Savings (€ / year)")
-            ax_sav.set_ylim(0, top5_df["Savings"].max() * 1.2)
-            ax_sav.grid(axis="y", linestyle="--", alpha=0.4)
-            fig_sav.tight_layout()
-            st.pyplot(fig_sav)
-            plt.close(fig_sav)
-
-        with col_rank:
-            st.markdown("<br>", unsafe_allow_html=True)
-            medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
-            for i, (_, row) in enumerate(top5_df.iterrows()):
-                colour = palette_sav[i]
-                st.markdown(f"""
-                <div class="metric-card" style="margin-bottom:0.75rem; border-left: 3px solid {colour}">
-                  <div class="metric-label">{medals[i]}  {row['Country']}</div>
-                  <div class="metric-value" style="color:{colour}">€{row['Savings']:,.0f}</div>
-                </div>""", unsafe_allow_html=True)
-
-
-
-        st.markdown("""
-        <div style="margin-top:1.5rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
-
-          <div class="metric-card" style="border-left:3px solid #f9c74f">
-            <div class="metric-label"> High-Income Powerhouses: Iceland & Denmark</div>
-            <p style="color:#d0c8f0; font-size:0.9rem; margin:0.5rem 0 0; line-height:1.65">
-              These countries lead because their <b style="color:#f9c74f">gross salaries are so high</b> that even
-              with an expensive cost of living, the remaining margin is massive.
-              <b style="color:#f9c74f">Iceland</b> often sees net monthly salaries exceeding $4,500–5,000, leaving
-              ~$2,000 in pure savings. <b style="color:#f9c74f">Denmark</b> benefits from high wages and a social
-              safety net that covers healthcare and education — so more take-home pay stays liquid.
-            </p>
-          </div>
-
-          <div class="metric-card" style="border-left:3px solid #4cc9f0">
-            <div class="metric-label"> The "Sweet Spot" Economies</div>
-            <p style="color:#d0c8f0; font-size:0.9rem; margin:0.5rem 0 0; line-height:1.65">
-              <b style="color:#4cc9f0">North Macedonia</b> offers some of the lowest living costs in Europe
-              (rent can be 80% cheaper than NYC) with disproportionately high wages for skilled workers.
-              <b style="color:#4cc9f0">Hungary</b> features a flat 15% income tax, letting workers keep more of
-              their pay in a country where utilities stay affordable.
-              <b style="color:#4cc9f0">Serbia</b> has seen a tech investment boom — high-earning locals and expats
-              live on local prices while earning global wages.
-            </p>
-          </div>
-
-        </div>
-        """, unsafe_allow_html=True)
-
-    except (FileNotFoundError, KeyError) as e:
-        st.error(f"Data error: {e}")
 
 st.markdown("""
 <hr style="border:none; border-top:1px solid #3d3460; margin-top:2.5rem;">

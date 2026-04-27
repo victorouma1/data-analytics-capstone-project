@@ -193,7 +193,7 @@ SURVEY_FILES = {
            "indicator_col": "Structure of earnings indicator", "sex_col": "Sex.1", "unit_col": "Unit of measure", "euro_value": "Euro"},
 }
 
-st.markdown('<div class="hero-title">💶 European Earnings Explorer</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-title"> European Earnings Explorer</div>', unsafe_allow_html=True)
 st.markdown('<div class="hero-sub">Salaries · Cost of Living · Savings Across Europe</div>', unsafe_allow_html=True)
 st.markdown('<div class="fancy-divider"></div>', unsafe_allow_html=True)
 
@@ -258,8 +258,7 @@ with tab_map:
           <b style="color:#f9c74f">Switzerland</b> consistently ranks as the most expensive country in Europe,
           driven by exceptional wages, a strong franc, and costly services.
           <b style="color:#f9c74f">Norway & Iceland</b> follow due to high labour wages and the necessity of
-          importing many goods. <b style="color:#f9c74f">Ireland</b> is pushed into the top tier by a severe
-          housing crisis and sky-high Dublin rents.
+          importing many goods.
         </p>
       </div>
 
@@ -416,7 +415,7 @@ with tab_pie:
             fig_pie, ax_pie = plt.subplots(figsize=(7, 7))
             wedges, texts, autotexts = ax_pie.pie(
                 [avg_rent, other],
-                labels=["Rent\n(1-Bed Apt)", "Everything Else\n(Food, Utilities, Savings…)"],
+                labels=["Rent\n(1-Bed Apt)", "Remaining Income"],
                 autopct="%1.1f%%",
                 startangle=140,
                 colors=["#f3722c", "#4cc9f0"],
@@ -647,12 +646,7 @@ with tab_savings:
                   <div class="metric-value" style="color:{colour}">€{row['Savings']:,.0f}</div>
                 </div>""", unsafe_allow_html=True)
 
-        with st.expander("📊 View full savings ranking"):
-            full_df = full_savings.reset_index()
-            full_df.columns = ["Country", "Estimated Annual Savings (€)"]
-            full_df["Estimated Annual Savings (€)"] = full_df["Estimated Annual Savings (€)"].round(0).astype(int)
-            full_df.index = range(1, len(full_df) + 1)
-            st.dataframe(full_df, use_container_width=True)
+
 
         st.markdown("""
         <div style="margin-top:1.5rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">

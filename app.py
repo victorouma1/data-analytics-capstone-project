@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import seaborn as sns
 import plotly.express as px
+import plotly.graph_objects as go
 
 st.set_page_config(
     page_title="European Earnings Explorer",
@@ -220,6 +221,28 @@ with tab_map:
         ]
         return filtered.groupby("Geopolitical entity (reporting)")[["OBS_VALUE"]].median()
 
+    @st.cache_data
+    def load_scatter_data():
+        ppp = pd.read_csv("Purchasing Power Parities.csv")
+        df_2022 = ppp[ppp["TIME_PERIOD"] == 2022]
+
+        # Price level index for AIC
+        pli = df_2022[
+            (df_2022["Purchasing power parities indicator"] == "Price level indices (EU27_2020=100)") &
+            (df_2022["Analytical categories for purchasing power parities (PPPs) calculation (based on COICOP18)"] == "Actual individual consumption")
+        ][["Geopolitical entity (reporting)", "OBS_VALUE"]].rename(columns={"OBS_VALUE": "price_level_index"})
+
+        # Nominal cost of living for AIC
+        cost = df_2022[
+            (df_2022["Purchasing power parities indicator"] == "Nominal expenditure per inhabitant (in euro)") &
+            (df_2022["Analytical categories for purchasing power parities (PPPs) calculation (based on COICOP18)"] == "Actual individual consumption")
+        ][["Geopolitical entity (reporting)", "OBS_VALUE"]].rename(columns={"OBS_VALUE": "cost_of_living"})
+
+        merged = pli.merge(cost, on="Geopolitical entity (reporting)")
+        merged["price_level_index"] = pd.to_numeric(merged["price_level_index"], errors="coerce")
+        merged["cost_of_living"] = pd.to_numeric(merged["cost_of_living"], errors="coerce")
+        return merged.dropna()
+
     try:
         ppp_grouped = load_map_data()
         import geopandas as gpd
@@ -247,6 +270,74 @@ with tab_map:
         st.plotly_chart(fig_map, use_container_width=True)
     except FileNotFoundError as e:
         st.error(f"Missing data file: {e}")
+
+    # ── Scatter: Price Level Index vs Cost of Living ──────────────────────
+    try:
+        scatter_df = load_scatter_data()
+        if not scatter_df.empty:
+            st.markdown(
+                '<div class="section-header" style="font-size:1.1rem; margin-top:1.6rem; margin-bottom:0.3rem;">'
+                'Price Level Index vs. Cost of Living per Country (2022)'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+            st.caption(
+                "Each dot is a country. X-axis: Price Level Index for Actual Individual Consumption "
+                "(EU27=100). Y-axis: Annual nominal expenditure per inhabitant (€)."
+            )
+
+            fig_scatter = px.scatter(
+                scatter_df,
+                x="price_level_index",
+                y="cost_of_living",
+                text="Geopolitical entity (reporting)",
+                labels={
+                    "price_level_index": "Price Level Index (EU27=100)",
+                    "cost_of_living": "Cost of Living — Nominal Expenditure (€/yr)",
+                },
+                color="cost_of_living",
+                color_continuous_scale="Plasma",
+            )
+            fig_scatter.update_traces(
+                textposition="top center",
+                textfont=dict(color="#d0c8f0", size=10),
+                marker=dict(size=10, line=dict(width=1, color="#1a1040")),
+            )
+            # Trendline
+            if len(scatter_df) > 2:
+                z = np.polyfit(scatter_df["price_level_index"], scatter_df["cost_of_living"], 1)
+                p = np.poly1d(z)
+                x_line = np.linspace(scatter_df["price_level_index"].min(), scatter_df["price_level_index"].max(), 100)
+                fig_scatter.add_trace(go.Scatter(
+                    x=x_line, y=p(x_line),
+                    mode="lines",
+                    line=dict(color="#f9c74f", width=1.5, dash="dash"),
+                    name="Trend",
+                    showlegend=True,
+                ))
+            fig_scatter.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(26,16,64,0.6)",
+                font=dict(color="#d0c8f0"),
+                xaxis=dict(
+                    gridcolor="#2e2755", zeroline=False,
+                    title_font=dict(color="#d0c8f0"),
+                    tickfont=dict(color="#a89ed0"),
+                ),
+                yaxis=dict(
+                    gridcolor="#2e2755", zeroline=False,
+                    title_font=dict(color="#d0c8f0"),
+                    tickfont=dict(color="#a89ed0"),
+                    tickformat="€,.0f",
+                ),
+                coloraxis_showscale=False,
+                margin=dict(l=10, r=10, t=20, b=10),
+                height=450,
+                legend=dict(font=dict(color="#d0c8f0")),
+            )
+            st.plotly_chart(fig_scatter, use_container_width=True)
+    except FileNotFoundError:
+        pass
 
     st.markdown("""
     <div style="margin-top:1.5rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
@@ -388,62 +479,184 @@ with tab_trend:
 
 with tab_pie:
     st.markdown('<div class="section-header">How Europeans Spend Their Income</div>', unsafe_allow_html=True)
-    st.caption("Average split between rent and all other expenses across European cities.")
+    st.caption("Monthly budget breakdown for a typical working person — select a country to explore.")
 
+    # ── Country dropdown ──────────────────────────────────────────────────
     @st.cache_data
-    def load_pie_data():
+    def get_pie_countries():
         df = pd.read_csv("cost-of-living in euros.csv", index_col=0)
-        euro_cities = [col for col in df.columns
-                       if any(col.strip().endswith(c) for c in EUROPEAN_COUNTRIES)]
-        df_euro = df[euro_cities]
-
-        avg_rent = (
-            df_euro.loc["Apartment (1 bedroom) in City Centre"].dropna().mean() +
-            df_euro.loc["Apartment (1 bedroom) Outside of Centre"].dropna().mean()
-        ) / 2
-        avg_salary = df_euro.loc["Average Monthly Net Salary (After Tax)"].dropna().mean()
-        other = avg_salary - avg_rent
-        return avg_rent, avg_salary, other, len(euro_cities)
+        available = set()
+        for col in df.columns:
+            country = col.strip().split(",")[-1].strip()
+            if country in EUROPEAN_COUNTRIES:
+                available.add(country)
+        return sorted(available)
 
     try:
-        avg_rent, avg_salary, other, n_cities = load_pie_data()
+        pie_countries = get_pie_countries()
+    except FileNotFoundError:
+        pie_countries = EUROPEAN_COUNTRIES
 
-        col_pie, col_stats = st.columns([3, 2], gap="large")
-        with col_pie:
-            fig_pie, ax_pie = plt.subplots(figsize=(7, 7))
-            wedges, texts, autotexts = ax_pie.pie(
-                [avg_rent, other],
-                labels=["Rent\n(1-Bed Apt)", "Remaining Income"],
-                autopct="%1.1f%%",
-                startangle=140,
-                colors=["#f3722c", "#4cc9f0"],
-                explode=(0.06, 0),
-                wedgeprops=dict(linewidth=2, edgecolor="#1a1040"),
-                textprops=dict(color="#f0ecff", fontsize=11),
-            )
-            for at in autotexts:
-                at.set_fontsize(13)
-                at.set_fontweight("bold")
-                at.set_color("#1a1040")
-            ax_pie.set_title("Monthly Net Income Distribution", color="#f9c74f", fontsize=14)
-            fig_pie.patch.set_facecolor("#1a1040")
-            st.pyplot(fig_pie)
-            plt.close(fig_pie)
+    default_pie = pie_countries.index("Germany") if "Germany" in pie_countries else 0
+    selected_pie_country = st.selectbox(
+        "Choose a Country",
+        options=pie_countries,
+        index=default_pie,
+        key="pie_country",
+    )
 
-        with col_stats:
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            for label, val, colour in [
-                ("Cities Analysed",        str(n_cities),             "#f9c74f"),
-                ("Avg Monthly Salary",     f"€{avg_salary:,.0f}",     "#90be6d"),
-                ("Avg Monthly Rent",       f"€{avg_rent:,.0f}",       "#f3722c"),
-                ("Remaining after Rent",   f"€{other:,.0f}",          "#4cc9f0"),
-                ("Rent as % of Salary",    f"{avg_rent/avg_salary*100:.1f}%", "#f94144"),
-            ]:
-                st.markdown(f"""
-                <div class="metric-card" style="margin-bottom:0.8rem">
-                  <div class="metric-label">{label}</div>
-                  <div class="metric-value" style="color:{colour}">{val}</div>
-                </div>""", unsafe_allow_html=True)
+    # ── Grocery basket weights (monthly quantities for 1 person) ──────────
+    GROCERY_BASKET = {
+        "Milk (regular), (1 liter)":                               8,   # 2L/week
+        "Loaf of Fresh White Bread (500g)":                        8,   # 2 loaves/week
+        "Eggs (regular) (12)":                                     2,   # 1 dozen/2 weeks
+        "Local Cheese (1kg)":                                      0.5,
+        "Chicken Breasts (Boneless, Skinless), (1kg)":             2,
+        "Beef Round (1kg) (or Equivalent Back Leg Red Meat)":      0.5,
+        "Apples (1kg)":                                            2,
+        "Oranges (1kg)":                                           1,
+        "Potato (1kg)":                                            3,
+        "Lettuce (1 head)":                                        2,
+        "Rice (white), (1kg)":                                     1,
+        "Tomato (1kg)":                                            2,
+        "Banana (1kg)":                                            2,
+        "Onion (1kg)":                                             1,
+        "Water (1.5 liter bottle)":                                8,
+    }
+
+    @st.cache_data
+    def load_pie_country_data(country: str):
+        df = pd.read_csv("cost-of-living in euros.csv", index_col=0)
+        # Filter to cities in selected country
+        city_cols = [c for c in df.columns if c.strip().split(",")[-1].strip() == country]
+        if not city_cols:
+            return None
+
+        city_df = df[city_cols].apply(pd.to_numeric, errors="coerce")
+        avg = city_df.mean(axis=1)  # average across cities in country
+
+        def get(row):
+            val = avg.get(row, np.nan)
+            return float(val) if not pd.isna(val) else 0.0
+
+        # ── Slice calculations ────────────────────────────────────────────
+        rent = get("Apartment (1 bedroom) Outside of Centre")
+
+        groceries = sum(
+            get(item) * qty for item, qty in GROCERY_BASKET.items()
+        )
+
+        dining_out = (
+            get("Meal, Inexpensive Restaurant") * 4 +   # ~1× per week
+            get("Cappuccino (regular)") * 10            # daily coffee on workdays
+        )
+
+        transport = get("Monthly Pass (Regular Price)")
+
+        utilities = (
+            get("Basic (Electricity, Heating, Cooling, Water, Garbage) for 85m2 Apartment") +
+            get("Internet (60 Mbps or More, Unlimited Data, Cable/ADSL)")
+        )
+
+        entertainment = (
+            get("Cinema, International Release, 1 Seat") * 2 +
+            get("Fitness Club, Monthly Fee for 1 Adult")
+        )
+
+        salary = get("Average Monthly Net Salary (After Tax)")
+
+        total_expenses = rent + groceries + dining_out + transport + utilities + entertainment
+        savings = max(salary - total_expenses, 0)
+
+        return {
+            "rent":          rent,
+            "groceries":     groceries,
+            "dining_out":    dining_out,
+            "transport":     transport,
+            "utilities":     utilities,
+            "entertainment": entertainment,
+            "savings":       savings,
+            "salary":        salary,
+            "total_expenses": total_expenses,
+            "n_cities":      len(city_cols),
+        }
+
+    try:
+        pie_data = load_pie_country_data(selected_pie_country)
+
+        if pie_data is None:
+            st.info(f"No city-level data found for **{selected_pie_country}**. Try another country.")
+        else:
+            rent         = pie_data["rent"]
+            groceries    = pie_data["groceries"]
+            dining_out   = pie_data["dining_out"]
+            transport    = pie_data["transport"]
+            utilities    = pie_data["utilities"]
+            entertainment = pie_data["entertainment"]
+            savings      = pie_data["savings"]
+            salary       = pie_data["salary"]
+            total_expenses = pie_data["total_expenses"]
+            n_cities     = pie_data["n_cities"]
+
+            # Build pie slices — only include positive values
+            slice_labels = ["Rent", "Groceries", "Dining Out", "Transport", "Utilities", "Entertainment", "Savings"]
+            slice_values = [rent, groceries, dining_out, transport, utilities, entertainment, savings]
+            slice_colors = ["#f3722c", "#90be6d", "#f9c74f", "#4cc9f0", "#a89ed0", "#f94144", "#43aa8b"]
+            slice_explode = (0.06, 0, 0, 0, 0, 0, 0.04)
+
+            # Filter out zero slices
+            filtered = [(l, v, c, e) for l, v, c, e in zip(slice_labels, slice_values, slice_colors, slice_explode) if v > 0]
+            if filtered:
+                f_labels, f_values, f_colors, f_explode = zip(*filtered)
+            else:
+                f_labels, f_values, f_colors, f_explode = slice_labels, slice_values, slice_colors, slice_explode
+
+            col_pie, col_stats = st.columns([3, 2], gap="large")
+
+            with col_pie:
+                fig_pie, ax_pie = plt.subplots(figsize=(7, 7))
+                wedges, texts, autotexts = ax_pie.pie(
+                    f_values,
+                    labels=f_labels,
+                    autopct="%1.1f%%",
+                    startangle=140,
+                    colors=f_colors,
+                    explode=f_explode,
+                    wedgeprops=dict(linewidth=2, edgecolor="#1a1040"),
+                    textprops=dict(color="#f0ecff", fontsize=10),
+                )
+                for at in autotexts:
+                    at.set_fontsize(11)
+                    at.set_fontweight("bold")
+                    at.set_color("#1a1040")
+                ax_pie.set_title(
+                    f"Monthly Budget Breakdown — {selected_pie_country}",
+                    color="#f9c74f", fontsize=13,
+                )
+                fig_pie.patch.set_facecolor("#1a1040")
+                st.pyplot(fig_pie)
+                plt.close(fig_pie)
+
+            with col_stats:
+                st.markdown("<br>", unsafe_allow_html=True)
+                stat_rows = [
+                    ("Cities Averaged",    str(n_cities),                           "#f9c74f"),
+                    ("Net Monthly Salary", f"€{salary:,.0f}",                       "#90be6d"),
+                    ("Rent",               f"€{rent:,.0f}",                         "#f3722c"),
+                    ("Groceries",          f"€{groceries:,.0f}",                    "#90be6d"),
+                    ("Dining Out",         f"€{dining_out:,.0f}",                   "#f9c74f"),
+                    ("Transport",          f"€{transport:,.0f}",                    "#4cc9f0"),
+                    ("Utilities",          f"€{utilities:,.0f}",                    "#a89ed0"),
+                    ("Entertainment",      f"€{entertainment:,.0f}",                "#f94144"),
+                    ("Savings",            f"€{savings:,.0f}",                      "#43aa8b"),
+                    ("Rent as % of Salary", f"{rent/salary*100:.1f}%" if salary > 0 else "N/A", "#f3722c"),
+                ]
+                for label, val, colour in stat_rows:
+                    st.markdown(f"""
+                    <div class="metric-card" style="margin-bottom:0.55rem">
+                      <div class="metric-label">{label}</div>
+                      <div class="metric-value" style="color:{colour}; font-size:1.25rem">{val}</div>
+                    </div>""", unsafe_allow_html=True)
 
     except (FileNotFoundError, KeyError) as e:
         st.error(f"Data error: {e}")

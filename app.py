@@ -199,12 +199,59 @@ st.markdown('<div class="hero-sub">Salaries · Cost of Living · Savings Across 
 st.markdown('<div class="fancy-divider"></div>', unsafe_allow_html=True)
 
 
-tab_map, tab_trend, tab_pie, tab_topbot = st.tabs([
+tab_overview, tab_map, tab_trend, tab_pie, tab_topbot, tab_recs = st.tabs([
+    "  Overview",
     "  Cost of Living Map",
     "  Salary vs Cost Trend",
     "  Income Breakdown",
     "  Top & Bottom Cities",
+    "  Recommendations",
 ])
+
+with tab_overview:
+    st.markdown('<div class="section-header">Project Overview</div>', unsafe_allow_html=True)
+    st.markdown('<div class="fancy-divider"></div>', unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="metric-card" style="border-left:3px solid #f9c74f; margin-bottom:1.5rem;">
+      <div class="metric-label">Problem Statement</div>
+      <p style="color:#d0c8f0; font-size:1rem; margin:0.6rem 0 0; line-height:1.8">
+        A larger paycheck is frequently a <b style="color:#f9c74f">financial mirage</b> — it does not always translate
+        into a better standard of living or increased savings due to the drastic variations in
+        <b style="color:#f3722c">rent</b>, <b style="color:#f3722c">cost of living</b>, and
+        <b style="color:#f3722c">local economic conditions</b>.
+      </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="metric-card" style="border-left:3px solid #4cc9f0; margin-bottom:1.5rem;">
+      <div class="metric-label">Description</div>
+      <p style="color:#d0c8f0; font-size:0.95rem; margin:0.6rem 0 0; line-height:1.8">
+        This project builds an <b style="color:#4cc9f0">end-to-end data analytics solution</b> that analyses and
+        compares cost of living and salary data across European countries, helping you cut through the noise
+        and understand where your money truly goes furthest.
+      </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="section-header" style="font-size:1.1rem; margin-top:1.5rem;">Research Questions</div>', unsafe_allow_html=True)
+
+    questions = [
+        ("  Cost of Living Map",   "#f9c74f", "How does cost of living vary across countries?"),
+        ("  Salary vs Cost Trend", "#f3722c", "What is the trend in cost of living and salary over time?"),
+        ("  Top & Bottom Cities",  "#4cc9f0", "What are the five most and least expensive cities in Europe?"),
+        ("  Income Breakdown",     "#90be6d", "How is monthly income spent in different European countries?"),
+    ]
+    for tab_label, colour, question in questions:
+        st.markdown(f"""
+        <div class="metric-card" style="margin-bottom:0.7rem; border-left:3px solid {colour}; display:flex; align-items:center; gap:1rem;">
+          <div>
+            <div class="metric-label" style="color:{colour}">{tab_label}</div>
+            <p style="color:#d0c8f0; font-size:0.93rem; margin:0.2rem 0 0; line-height:1.6">{question}</p>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 with tab_map:
     st.markdown('<div class="section-header">Cost of Living Across Europe (2022)</div>', unsafe_allow_html=True)
@@ -226,13 +273,11 @@ with tab_map:
         ppp = pd.read_csv("Purchasing Power Parities.csv")
         df_2022 = ppp[ppp["TIME_PERIOD"] == 2022]
 
-        # Price level index for AIC
         pli = df_2022[
             (df_2022["Purchasing power parities indicator"] == "Price level indices (EU27_2020=100)") &
             (df_2022["Analytical categories for purchasing power parities (PPPs) calculation (based on COICOP18)"] == "Actual individual consumption")
         ][["Geopolitical entity (reporting)", "OBS_VALUE"]].rename(columns={"OBS_VALUE": "price_level_index"})
 
-        # Nominal cost of living for AIC
         cost = df_2022[
             (df_2022["Purchasing power parities indicator"] == "Nominal expenditure per inhabitant (in euro)") &
             (df_2022["Analytical categories for purchasing power parities (PPPs) calculation (based on COICOP18)"] == "Actual individual consumption")
@@ -271,7 +316,6 @@ with tab_map:
     except FileNotFoundError as e:
         st.error(f"Missing data file: {e}")
 
-    # ── Scatter: Price Level Index vs Cost of Living ──────────────────────
     try:
         scatter_df = load_scatter_data()
         if not scatter_df.empty:
@@ -481,7 +525,6 @@ with tab_pie:
     st.markdown('<div class="section-header">How Europeans Spend Their Income</div>', unsafe_allow_html=True)
     st.caption("Monthly budget breakdown for a typical working person — select a country to explore.")
 
-    # ── Country dropdown ──────────────────────────────────────────────────
     @st.cache_data
     def get_pie_countries():
         df = pd.read_csv("cost-of-living in euros.csv", index_col=0)
@@ -504,12 +547,10 @@ with tab_pie:
         index=default_pie,
         key="pie_country",
     )
-
-    # ── Grocery basket weights (monthly quantities for 1 person) ──────────
     GROCERY_BASKET = {
-        "Milk (regular), (1 liter)":                               8,   # 2L/week
-        "Loaf of Fresh White Bread (500g)":                        8,   # 2 loaves/week
-        "Eggs (regular) (12)":                                     2,   # 1 dozen/2 weeks
+        "Milk (regular), (1 liter)":                               8,   
+        "Loaf of Fresh White Bread (500g)":                        8,   
+        "Eggs (regular) (12)":                                     2,   
         "Local Cheese (1kg)":                                      0.5,
         "Chicken Breasts (Boneless, Skinless), (1kg)":             2,
         "Beef Round (1kg) (or Equivalent Back Leg Red Meat)":      0.5,
@@ -527,19 +568,17 @@ with tab_pie:
     @st.cache_data
     def load_pie_country_data(country: str):
         df = pd.read_csv("cost-of-living in euros.csv", index_col=0)
-        # Filter to cities in selected country
         city_cols = [c for c in df.columns if c.strip().split(",")[-1].strip() == country]
         if not city_cols:
             return None
 
         city_df = df[city_cols].apply(pd.to_numeric, errors="coerce")
-        avg = city_df.mean(axis=1)  # average across cities in country
+        avg = city_df.mean(axis=1) 
 
         def get(row):
             val = avg.get(row, np.nan)
             return float(val) if not pd.isna(val) else 0.0
 
-        # ── Slice calculations ────────────────────────────────────────────
         rent = get("Apartment (1 bedroom) Outside of Centre")
 
         groceries = sum(
@@ -547,8 +586,8 @@ with tab_pie:
         )
 
         dining_out = (
-            get("Meal, Inexpensive Restaurant") * 4 +   # ~1× per week
-            get("Cappuccino (regular)") * 10            # daily coffee on workdays
+            get("Meal, Inexpensive Restaurant") * 4 +  
+            get("Cappuccino (regular)") * 10           
         )
 
         transport = get("Monthly Pass (Regular Price)")
@@ -598,13 +637,11 @@ with tab_pie:
             total_expenses = pie_data["total_expenses"]
             n_cities     = pie_data["n_cities"]
 
-            # Build pie slices — only include positive values
             slice_labels = ["Rent", "Groceries", "Dining Out", "Transport", "Utilities", "Entertainment", "Savings"]
             slice_values = [rent, groceries, dining_out, transport, utilities, entertainment, savings]
             slice_colors = ["#f3722c", "#90be6d", "#f9c74f", "#4cc9f0", "#a89ed0", "#f94144", "#43aa8b"]
             slice_explode = (0.06, 0, 0, 0, 0, 0, 0.04)
 
-            # Filter out zero slices
             filtered = [(l, v, c, e) for l, v, c, e in zip(slice_labels, slice_values, slice_colors, slice_explode) if v > 0]
             if filtered:
                 f_labels, f_values, f_colors, f_explode = zip(*filtered)
@@ -798,6 +835,61 @@ with tab_topbot:
     </div>
     """, unsafe_allow_html=True)
 
+
+with tab_recs:
+    st.markdown('<div class="section-header">Recommendations</div>', unsafe_allow_html=True)
+    st.markdown('<div class="fancy-divider"></div>', unsafe_allow_html=True)
+    st.caption("Key takeaways and actionable guidance based on the analysis.")
+
+    recommendations = [
+        {
+            "number": "01",
+            "title": "Target Switzerland or the Nordics for High Earning Potential",
+            "colour": "#f9c74f",
+            "detail": "If maximising gross salary is the priority, Switzerland and the Nordic countries (Norway, Denmark, Sweden) offer the highest wage ceilings in Europe. Factor in the elevated cost of living, but strong social services and savings rates can still make them worthwhile.",
+        },
+        {
+            "number": "02",
+            "title": "Consider Eastern Europe or Turkey for Maximum Affordability",
+            "colour": "#90be6d",
+            "detail": "Countries such as Romania, Bulgaria, and Turkey offer dramatically lower day-to-day expenses. Remote workers or those with location-independent income can stretch their earnings significantly further in these markets.",
+        },
+        {
+            "number": "03",
+            "title": "Look at Rural Mediterranean Regions for a Balanced Lifestyle",
+            "colour": "#4cc9f0",
+            "detail": "Portugal, southern Spain, Greece, and southern Italy offer a middle ground — moderate salaries paired with a lower cost of living, quality food, and a favourable climate. Particularly attractive for retirees or lifestyle-focused movers.",
+        },
+        {
+            "number": "04",
+            "title": "Budget Heavily for Rent if Moving to Major Financial Hubs",
+            "colour": "#f3722c",
+            "detail": "Cities like London, Zurich, Amsterdam, and Dublin command rent that can consume 40–60 % of a net salary. Negotiate housing allowances upfront, consider commuter belts, or co-living arrangements to keep rent as a manageable share of income.",
+        },
+    ]
+
+    for rec in recommendations:
+        st.markdown(f"""
+        <div class="metric-card" style="margin-bottom:1.1rem; border-left:4px solid {rec['colour']};">
+          <div style="display:flex; align-items:flex-start; gap:1rem;">
+            <div style="flex:1">
+              <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.35rem;">
+                <span style="font-family:'Syne',sans-serif; font-size:0.7rem; font-weight:700;
+                             color:{rec['colour']}; letter-spacing:0.12em; text-transform:uppercase;">
+                  Rec {rec['number']}
+                </span>
+              </div>
+              <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:1.05rem;
+                          color:#f0ecff; margin-bottom:0.45rem; line-height:1.35">
+                {rec['title']}
+              </div>
+              <p style="color:#a89ed0; font-size:0.9rem; margin:0; line-height:1.7">
+                {rec['detail']}
+              </p>
+            </div>
+          </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 st.markdown("""
 <hr style="border:none; border-top:1px solid #3d3460; margin-top:2.5rem;">

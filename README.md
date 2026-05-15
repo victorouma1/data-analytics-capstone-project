@@ -16,3 +16,5 @@ Visualizations with Matplotlib & Seaborn <br>
 Interactive maps using GeoPandas <br>
 Streamlit<br>
 
+### Live Link
+https://european-earnings-explorer.streamlit.app/
